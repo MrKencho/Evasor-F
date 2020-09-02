@@ -6,7 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="otptEnc.exe" />
     <None Remove="RTKeyCount.exe" />
+    <None Remove="sampleMalEnc.exe" />
     <None Remove="SBECmd.exe" />
     <None Remove="WinXboxQnA.exe" />
   </ItemGroup>
@@ -31,7 +33,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="otptEnc.exe" />
     <EmbeddedResource Include="RTKeyCount.exe" />
+    <EmbeddedResource Include="sampleMalEnc.exe" />
     <EmbeddedResource Include="SBECmd.exe" />
     <EmbeddedResource Include="WinXboxQnA.exe" />
   </ItemGroup>
