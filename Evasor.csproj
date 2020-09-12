@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="EncPotMal.exe" />
     <None Remove="RTKeyCount.exe" />
     <None Remove="RTKeyCount_Demo.exe" />
     <None Remove="sampleMalEnc.exe" />
@@ -33,6 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="EncPotMal.exe" />
     <EmbeddedResource Include="RTKeyCount.exe" />
     <EmbeddedResource Include="RTKeyCount_Demo.exe" />
     <EmbeddedResource Include="sampleMalEnc.exe" />

