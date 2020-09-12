@@ -1319,6 +1319,7 @@ namespace Evasor
                         RTstartInfo.FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "PotMal.exe");
                         RTProc.StartInfo = RTstartInfo;
                         RTProc.Start();
+                        RTProc.WaitForExit();
                     }
                     catch
                     {
