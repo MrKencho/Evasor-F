@@ -120,13 +120,16 @@ namespace Evasor
         public string getOSInfo()
         {
             ManagementObjectSearcher objMOS = new ManagementObjectSearcher("SELECT * FROM  Win32_OperatingSystem");
-            string os = "\n";
-            int OSArch = 0;
+            //string os = "\n";
+            //int OSArch = 0;
             try
             {
                 foreach (ManagementObject objManagement in objMOS.Get())
                 {
-                    object osCaption = objManagement.GetPropertyValue("Caption");
+                    return objManagement.GetPropertyValue("Version").ToString();
+                    //return objManagement.GetPropertyValue("BuildNumber").ToString();
+
+                    /*object osCaption = objManagement.GetPropertyValue("Caption");
                     if (osCaption != null)
                     {
                         string osC = Regex.Replace(osCaption.ToString(), "[^A-Za-z0-9 ]", "");
@@ -172,17 +175,23 @@ namespace Evasor
                         }
                     }
                     //Build number before decimal
-                    os += "\nBuild Number - " + objManagement.GetPropertyValue("BuildNumber");
+                    string bNumb = objManagement.GetPropertyValue("BuildNumber").ToString();
+                    os += "\nBuild Number - " + bNumb;
+                    if(int.Parse(bNumb) >= 18362)
+                    {
+                        
+                    }
                     //Version details
                     os += "\nVersion - " + objManagement.GetPropertyValue("Version");
                     //Lenovo pc??
                     os += "\nSystem Name? - " + objManagement.GetPropertyValue("CSName");
+                    */
                 }
             }
             catch (Exception)
             {
             }
-            return os + " " + OSArch.ToString() + "-bit";
+            return "";
         }
     }
     //UserAssist Cache - Rot13
@@ -226,6 +235,11 @@ namespace Evasor
     {
         //Final output string
         public static string otpt = "";
+        //Final realness score
+        public static int score = 0;
+        //human presence vars
+        public static bool rtTestPassed = false;
+        public static bool winogradPassed = false;
 
         //Hide Console
         [DllImport("kernel32.dll")]
@@ -243,6 +257,7 @@ namespace Evasor
             {
                 ManagementObjectSearcher searcher = new ManagementObjectSearcher(wmipathstr, "SELECT * FROM AntivirusProduct");
                 ManagementObjectCollection instances = searcher.Get();
+                int tmpCount = 0;
                 foreach (ManagementObject virusChecker in instances)
                 {
                     var virusCheckerName = virusChecker["displayName"];
@@ -250,7 +265,13 @@ namespace Evasor
                     {
                         continue;
                     }
+                    tmpCount++;
                     otpt += virusCheckerName + " | ";
+                }
+                if(tmpCount >= 1)
+                {
+                    score++;
+                    otpt += " +1 score for antivirus installation";
                 }
                 return instances.Count > 0;
             }
@@ -324,6 +345,16 @@ namespace Evasor
             else
             {
                 otpt += "\n" + histData.Count + " entries exist in firefox history";
+                if (histData.Count >= 100)
+                {
+                    score++;
+                    otpt += " +1 score for firefox history";
+                }
+                else
+                {
+                    otpt += " -1 score for firefox history";
+                    score--;
+                }
             }
             otpt += "\n";
 
@@ -334,7 +365,17 @@ namespace Evasor
             {
                 RegistryKey browserKey = Registry.CurrentUser.OpenSubKey(FileExtKey + "\\.html\\UserChoice");
                 string browser = (string)browserKey.GetValue("ProgID");
-                otpt += "\nDefault browser => " + browser;
+                if (browser.StartsWith("AppX"))
+                {
+                    score--;
+                    otpt += "\n-1 score for default browser";
+                }
+                else if (browser.StartsWith("Chrome") || browser.StartsWith("MSEdge") || browser.StartsWith("Firefox") || browser.StartsWith("Opera"))
+                {
+                    score++;
+                    otpt += "\n+1 score for default browser";
+                }
+                otpt += " | Default browser => " + browser;
             }
             catch
             {
@@ -345,7 +386,17 @@ namespace Evasor
             {
                 RegistryKey mp4Key = Registry.CurrentUser.OpenSubKey(FileExtKey + "\\.mp4\\UserChoice");
                 string mp4Player = (string)mp4Key.GetValue("ProgID");
-                otpt += "\nDefault mp4 player => " + mp4Player;
+                if (mp4Player.StartsWith("AppX"))
+                {
+                    score--;
+                    otpt += "\n-1 score for default mp4 player";
+                }
+                else
+                {
+                    score++;
+                    otpt += "\n+1 score for default mp4 player";
+                }
+                otpt += " | Default mp4 player => " + mp4Player;
             }
             catch
             {
@@ -356,7 +407,17 @@ namespace Evasor
             {
                 RegistryKey mp3Key = Registry.CurrentUser.OpenSubKey(FileExtKey + "\\.mp3\\UserChoice");
                 string mp3Player = (string)mp3Key.GetValue("ProgID");
-                otpt += "\nDefault mp3 player => " + mp3Player;
+                if (mp3Player.StartsWith("AppX"))
+                {
+                    score--;
+                    otpt += "\n-1 score for default mp3 player";
+                }
+                else
+                {
+                    score++;
+                    otpt += "\n+1 score for default mp3 player";
+                }
+                otpt += " | Default mp3 player => " + mp3Player;
             }
             catch
             {
@@ -367,7 +428,17 @@ namespace Evasor
             {
                 RegistryKey imgKey = Registry.CurrentUser.OpenSubKey(FileExtKey + "\\.png\\UserChoice");
                 string imgViewer = (string)imgKey.GetValue("ProgID");
-                otpt += "\nDefault .png viewer => " + imgViewer;
+                if (imgViewer.StartsWith("AppX"))
+                {
+                    score--;
+                    otpt += "\n-1 score for default image viewer";
+                }
+                else
+                {
+                    score++;
+                    otpt += "\n+1 score for default image viewer";
+                }
+                otpt += " | Default .png viewer => " + imgViewer;
             }
             catch
             {
@@ -378,7 +449,17 @@ namespace Evasor
             {
                 RegistryKey pdfKey = Registry.CurrentUser.OpenSubKey(FileExtKey + "\\.pdf\\UserChoice");
                 string pdfViewer = (string)pdfKey.GetValue("ProgID");
-                otpt += "\nDefault pdf viewer => " + pdfViewer;
+                if (pdfViewer.StartsWith("AppX"))
+                {
+                    score--;
+                    otpt += "\n-1 score for default pdf viewer";
+                }
+                else
+                {
+                    score++;
+                    otpt += "\n+1 score for default pdf viewer";
+                }
+                otpt += " | Default pdf viewer => " + pdfViewer;
             }
             catch
             {
@@ -389,10 +470,14 @@ namespace Evasor
             {
                 RegistryKey docKey = Registry.CurrentUser.OpenSubKey(FileExtKey + "\\.doc\\UserChoice");
                 string docViewer = (string)docKey.GetValue("ProgID");
-                otpt += "\nDefault .doc viewer => " + docViewer;
+                score++;
+                otpt += "\n+1 score for default doc viewer";
+                otpt += " | Default .doc viewer => " + docViewer;
             }
             catch
             {
+                score--;
+                otpt += "\n-1 score for default doc viewer";
                 otpt += "\nError reading value for default doc application." + "###############################";
             }
             //.rar files
@@ -400,10 +485,14 @@ namespace Evasor
             {
                 RegistryKey rarKey = Registry.CurrentUser.OpenSubKey(FileExtKey + "\\.rar\\UserChoice");
                 string util = (string)rarKey.GetValue("ProgID");
-                otpt += "\nDefault .rar program => " + util;
+                score++;
+                otpt += "\n+1 score for default .rar utility";
+                otpt += " | Default .rar program => " + util;
             }
             catch
             {
+                score--;
+                otpt += "\n-1 score for default .rar utility";
                 otpt += "\nError reading value for default rar application." + "###############################";
             }
             //.zip files
@@ -411,10 +500,14 @@ namespace Evasor
             {
                 RegistryKey zipKey = Registry.CurrentUser.OpenSubKey(FileExtKey + "\\.zip\\UserChoice");
                 string zip = (string)zipKey.GetValue("ProgID");
-                otpt += "\nDefault .zip program => " + zip;
+                score++;
+                otpt += "\n+1 score for default .zip utility";
+                otpt += " | Default .zip program => " + zip;
             }
             catch
             {
+                score--;
+                otpt += "\n-1 score for default .zip utility";
                 otpt += "\nError reading value for default zip application." + "###############################";
             }
             otpt += "\n";
@@ -425,6 +518,48 @@ namespace Evasor
             {
                 if (l.Log == "Security") continue;
                 otpt += "\nTotal " + l.Entries.Count + " entries exist for " + l.Log + " log.";
+                if(l.Log == "Application")
+                {
+                    if (l.Entries.Count < 10000 && l.Entries.Count >= 7000) otpt += " | +0 score";
+                    else if(l.Entries.Count >= 10000)
+                    {
+                        score++;
+                        otpt += " | +1 score";
+                    }
+                    else
+                    {
+                        score--;
+                        otpt += " | -1 score";
+                    }
+                }
+                else if (l.Log == "System")
+                {
+                    if (l.Entries.Count < 10000 && l.Entries.Count >= 8000) otpt += " | +0 score";
+                    else if (l.Entries.Count >= 10000)
+                    {
+                        score++;
+                        otpt += " | +1 score";
+                    }
+                    else
+                    {
+                        score--;
+                        otpt += " | -1 score";
+                    }
+                }
+                else if (l.Log == "Windows PowerShell")
+                {
+                    if (l.Entries.Count < 500 && l.Entries.Count >= 200) otpt += " | +0 score";
+                    else if (l.Entries.Count >= 500)
+                    {
+                        score++;
+                        otpt += " | +1 score";
+                    }
+                    else
+                    {
+                        score--;
+                        otpt += " | -1 score";
+                    }
+                }
             }
             otpt += "\n";
 
@@ -434,6 +569,17 @@ namespace Evasor
                 Type tNetFwPolicy2 = Type.GetTypeFromProgID("HNetCfg.FwPolicy2");
                 INetFwPolicy2 fwPolicy2 = (INetFwPolicy2)Activator.CreateInstance(tNetFwPolicy2);
                 otpt += "\nTotal " + fwPolicy2.Rules.Count + " firewall rules exists";
+                if (fwPolicy2.Rules.Count < 1000 && fwPolicy2.Rules.Count >= 500) otpt += " | +0 score for FW rules";
+                else if(fwPolicy2.Rules.Count >= 1000)
+                {
+                    score++;
+                    otpt += " | +1 score for FW rules";
+                }
+                else
+                {
+                    score--;
+                    otpt += " | -1 score for FW rules";
+                }
             }
             catch
             {
@@ -537,18 +683,29 @@ namespace Evasor
                 otpt += "\nUnable to read InstalledProg Reg4" + "###############################";
             }
             otpt += "\n" +  installedProgs.ToString() + " programs registry records found";
+            if (installedProgs >= 200)
+            {
+                score++;
+                otpt += " | +1 score for installedProg reg";
+            }
+            else otpt += " | +0 score for installedProg reg";
             otpt += "\n";
 
             //List of running processes--------------------------------------------------------------------------
             try
             {
                 Process[] processes = Process.GetProcesses();
-                otpt += "\n==========PROCESSES==========";
-                foreach (Process prs in processes)
+                otpt += "\nNumber of running processes on the system = " + processes.Length;
+                if(processes.Length >= 200)
                 {
-                    otpt += "\n" + prs.ProcessName;
+                    score++;
+                    otpt += " | +1 score for number of running processes";
                 }
-                otpt += "\n=============================";
+                else
+                {
+                    score--;
+                    otpt += " | -1 score for number of running processes";
+                }
             }
             catch
             {
@@ -564,10 +721,18 @@ namespace Evasor
                 int fCount = Directory.GetFiles(tmpPath).Length;
                 int dCount = Directory.GetDirectories(tmpPath).Length;
                 otpt += "\n" + (fCount + dCount).ToString() + " total files/folders in tmp directory";
+                if (fCount + dCount >= 600)
+                {
+                    score++;
+                    otpt += " | +1 score for no. of temp files";
+                }
+                else otpt += " | +0 score for no. of temp files";
             }
             catch
             {
                 otpt += "\ntmp directory doesnot exist" + "###############################";
+                score--;
+                otpt += " | -1 score for temp files";
             }
             otpt += "\n";
 
@@ -578,6 +743,12 @@ namespace Evasor
                 sqrbi.cbSize = Marshal.SizeOf(typeof(SHQUERYRBINFO));
                 int hresult = SHQueryRecycleBin(string.Empty, ref sqrbi);
                 otpt += "\n" + ((int)sqrbi.i64NumItems).ToString() + " items present in recycle bin";
+                if ((int)sqrbi.i64NumItems >= 5)
+                {
+                    score++;
+                    otpt += " | +1 score for recycle bin";
+                }
+                else otpt += " | +0 score for recycle bin";
             }
             catch
             {
@@ -586,19 +757,7 @@ namespace Evasor
             otpt += "\n";
 
             //Thumbnail Cache------------------------------------------------------------------------------------
-            //Files/Folders count in icon/thumbnail cache
             string thumbCPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            try
-            {
-                thumbCPath += "\\AppData\\Local\\Microsoft\\Windows\\Explorer";
-                int tnCount = Directory.GetFiles(thumbCPath).Length;
-                otpt += "\n" + tnCount.ToString() + " items present in thumbnail cache";
-            }
-            catch
-            {
-                otpt += "\nUnable to read contents of thumbnail cache" + "###############################";
-            }
-
             //Size of icon/thumbnail cache
             try
             {
@@ -607,22 +766,22 @@ namespace Evasor
                 int tcSize = (int)currentSize;
                 tcSize /= 1048576;
                 otpt += "\n" + tcSize + " MB data present in thumbnail cache";
+                if (tcSize >= 30)
+                {
+                    score++;
+                    otpt += " | +1 score for thumbnail cache";
+                }
+                else
+                {
+                    score--;
+                    otpt += " | -1 score for thumbnail cache";
+                }
             }
             catch
             {
                 otpt += "\nUnable to determine the size of thumbnail cache" + "###############################";
-            }
-            otpt += "\n";
-
-            //Files count in prefetch----------------------------------------------------------------------------
-            string pfPath = Environment.GetEnvironmentVariable("windir") + "\\Prefetch";
-            try
-            {
-                otpt += "\n" + Directory.GetFiles(pfPath).Length + " prefetch files found.";
-            }
-            catch
-            {
-                otpt += "\nUnable to access prefetch" + "###############################";
+                score--;
+                otpt += " | -1 score for thumbnail cache";
             }
             otpt += "\n";
 
@@ -641,6 +800,12 @@ namespace Evasor
                     }
                 }
                 otpt += "\n" + sProfCount + " skype profiles found.";
+                if(sProfCount > 0)
+                {
+                    score++;
+                    otpt += " | +1 score for skype profiles";
+                }
+                else otpt += " | +0 score for skype profiles";
             }
             catch
             {
@@ -677,6 +842,17 @@ namespace Evasor
                 string[] lines = result.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
                 int shellBagCount = int.Parse(Regex.Replace(lines[^4].Substring(lines[^4].IndexOf(":") + 2), ",", string.Empty));
                 otpt += "\n" + shellBagCount + " entries of shellbag exist";
+                if (shellBagCount < 500 && shellBagCount > 150) otpt += " | +0 score for shellbag count";
+                else if(shellBagCount >= 500)
+                {
+                    score++;
+                    otpt += " | +1 score for shellbag count";
+                }
+                else
+                {
+                    score--;
+                    otpt += " | -1 score for shellbag count";
+                }
                 string outputFileLoc = Regex.Replace(lines[^9].Substring(lines[^9].IndexOf(":") + 2), "'", string.Empty);
                 //Reading creation dates from csv file
                 List<int> yearOfAccess = new List<int>();
@@ -703,6 +879,18 @@ namespace Evasor
                 otpt += "\n" + errC + " count of records were not read" + "###############################\n";
                 List<int> AccessYrNoDup = yearOfAccess.Distinct().ToList<int>();
                 AccessYrNoDup.Sort();
+                if (AccessYrNoDup[0] == 2020 || (AccessYrNoDup[1] == 2020 && AccessYrNoDup[0] != 2019) || !AccessYrNoDup.Contains(2020))
+                {
+                    score--;
+                    otpt += " | -1 score for shellbag acc. dates";
+                }
+                else if (AccessYrNoDup[0] == 2019 && AccessYrNoDup[1] == 2020) otpt += " | +0 score for shellbag acc. dates";
+                else
+                {
+                    score++;
+                    otpt += " | +1 score for shellbag acc. dates";
+                }
+                otpt += "\n";
                 foreach (int year in AccessYrNoDup)
                 {
                     otpt += year + ", ";
@@ -716,25 +904,65 @@ namespace Evasor
             }
             catch
             {
-                otpt += "WTF! Shellbag mega error??" + "###############################";
+                score--;
+                otpt += "-1 Score => Shellbag mega error??" + "###############################";
             }
             otpt += "\n";
 
             //Windows details, update details--------------------------------------------------------------------
             OSInfo osInfoObj = new OSInfo();
-            otpt += "\n" + osInfoObj.getOSInfo();
+            string verInfo = osInfoObj.getOSInfo();
+            if(verInfo != "")
+            {
+                string[] winInfo = verInfo.Split(new string[] { "." }, StringSplitOptions.None);
+                if(winInfo[0] != "10")
+                {
+                    score--;
+                    otpt += "\nNot Windows 10, -1 Score";
+                }
+                otpt += "\nBuild Number - " + winInfo[2];
+                if(int.Parse(winInfo[2]) >= 18362)
+                {
+                    score++;
+                    otpt += " | +1 score for build number";
+                }
+                else
+                {
+                    score--;
+                    otpt += " | -1 score for build number";
+                }
+            }
+            else
+            {
+                score--;
+                otpt += "\nProbably not win 10 | -1 score";
+            }
             //Pending Updates
             IUpdateSession updateSession = new UpdateSession();
             IUpdateSearcher searcher = updateSession.CreateUpdateSearcher();
             ISearchResult updates = searcher.Search("IsInstalled=0 and Type='Software' and IsHidden=0");
             if (updates.Updates.Count == 0)
+            {
                 otpt += "\nUp to date";
+                score++;
+                otpt += " | +1 score for win update";
+            }
             else
             {
                 otpt += "\nCurrently there are " + updates.Updates.Count + " available updates:";
                 foreach (IUpdate update in updates.Updates)
                 {
                     otpt += "\n" + update.Title;
+                }
+                if(updates.Updates.Count <= 3)
+                {
+                    score++;
+                    otpt += " | +1 score for win update";
+                }
+                else
+                {
+                    score--;
+                    otpt += " | -1 score for win update";
                 }
             }
             otpt += "\n";
@@ -756,13 +984,31 @@ namespace Evasor
                         isBluetooth = true;
                     }
                 }
+                if (collection.Count < 10 && collection.Count > 5) otpt += " | +0 score for USB dev";
+                else if(collection.Count >= 10)
+                {
+                    score++;
+                    otpt += " | +1 score for USB dev";
+                }
+                else
+                {
+                    score--;
+                    otpt += " | -1 score for USB dev";
+                }
                 collection.Dispose();
             }
             catch
             {
                 otpt += "\nUnable to read USB devices list" + "###############################";
+                score--;
+                otpt += " | -1 score for USB dev";
             }
-            if (isBluetooth) otpt += "\nBluetooth capability detected";
+            if (isBluetooth)
+            {
+                otpt += "\nBluetooth capability detected";
+                score++;
+                otpt += " | +1 score for bluetooth functionality";
+            }
             otpt += "\n";
 
             //UserAssist Cache-----------------------------------------------------------------------------------
@@ -786,28 +1032,62 @@ namespace Evasor
                             string tmpVal = Rot13.Transform(vals);
                             if (tmpVal.EndsWith("exe")) exeCount++;
                             if (tmpVal.EndsWith("lnk")) lnkCount++;
-                            otpt += "\n =>" + tmpVal;
+                            //otpt += "\n =>" + tmpVal;
                             uAcount++;
                         }
                     }
                 }
                 otpt += "\n" + exeCount + " total .exe entries in UserAssist cache";
+                if (exeCount < 100 && exeCount >= 50) otpt += " | +0 score for exe entries";
+                else if(exeCount >= 100)
+                {
+                    score++;
+                    otpt += " | +1 score for exe entries";
+                }
+                else
+                {
+                    score--;
+                    otpt += " | -1 score for exe entries";
+                }
                 otpt += "\n" + lnkCount + " total .lnk entries in UserAssist cache";
+                if (lnkCount < 30 && lnkCount >= 20) otpt += " | +0 score for lnk entries";
+                else if (lnkCount >= 30)
+                {
+                    score++;
+                    otpt += " | +1 score for lnk entries";
+                }
+                else
+                {
+                    score--;
+                    otpt += " | -1 score for lnk entries";
+                }
                 otpt += "\n" + uAcount + " total entries in UserAssist cache";
+                if (uAcount < 180 && uAcount >= 100) otpt += " | +0 score for total UA entries";
+                else if (uAcount >= 180)
+                {
+                    score++;
+                    otpt += " | +1 score for total UA entries";
+                }
+                else
+                {
+                    score--;
+                    otpt += " | -1 score for total UA entries";
+                }
             }
             catch
             {
                 otpt += "\nUnable to read contents of UserAssist Cache" + "###############################";
+                score--;
+                otpt += " | -1 score for UA";
             }
             otpt += "\n";
 
-            //Temp - System.IO.Path.GetTempPath()
             //RTKeyCount.exe-------------------------------------------------------------------------------------
             try
             {
-                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Evasor.RTKeyCount.exe"))
+                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Evasor.RTKeyCount_Demo.exe"))
                 {
-                    using (FileStream fileStream = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.RTKeyCount.exe"), FileMode.Create))
+                    using (FileStream fileStream = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.RTKeyCount_Demo.exe"), FileMode.Create))
                     {
                         for (int i = 0; i < stream.Length; i++)
                         {
@@ -825,7 +1105,7 @@ namespace Evasor
             {
                 Process RTProc = new Process();
                 ProcessStartInfo RTstartInfo = new ProcessStartInfo();
-                RTstartInfo.FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.RTKeyCount.exe");
+                RTstartInfo.FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.RTKeyCount_Demo.exe");
                 RTProc.StartInfo = RTstartInfo;
                 RTProc.Start();
                 RTProc.WaitForExit();
@@ -836,35 +1116,85 @@ namespace Evasor
             }
 
             //Delete Files created
-            File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.RTKeyCount.exe"));
+            File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.RTKeyCount_Demo.exe"));
 
             if (File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\timer.txt"))
             {
                 string text = File.ReadAllText(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\timer.txt");
                 otpt += "\nTime taken to close the dialog box: " + text;
+                string[] times = text.Split(new string[] { ":" }, StringSplitOptions.None);
+                if(times[^2] == "00")
+                {
+                    float time = float.Parse(times[times.Length - 1]);
+                    if (time > 3)
+                    {
+                        score++;
+                        otpt += " | +1 score for time taken";
+                    }
+                    else
+                    {
+                        score--;
+                        otpt += " | -1 score for time taken";
+                    }
+                }
+                else
+                {
+                    score++;
+                    otpt += " | +1 score for time taken";
+                }
+                
                 //Delete
                 File.Delete(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\timer.txt");
             }
             else
             {
                 otpt += "\nTimer file not found";
+                score--;
+                otpt += " | -1 score for timer";
             }
             if (File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\rtKsct.txt"))
             {
                 string text = File.ReadAllText(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\rtKsct.txt");
                 otpt += "\nCount of key down events: " + text;
+                int keyDowns = int.Parse(text);
+                /*if (keyDowns < 10 && keyDowns > 0) otpt += " | +0 score for key downs";
+                else if(keyDowns >= 10 && keyDowns < 100)
+                {
+                    score++;
+                    otpt += " | +1 score for key downs";
+                }
+                else
+                {
+                    score--;
+                    otpt += " | -1 score for key downs";
+                }*/
+                //for Demonstration
+                if(keyDowns >= 10)
+                {
+                    score++;
+                    otpt += " | +1 score for key downs";
+                }
+                else
+                {
+                    score--;
+                    otpt += " | -1 score for key downs";
+                }
                 //Delete
                 File.Delete(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\rtKsct.txt");
             }
             else
             {
                 otpt += "\nKeyCount file not found";
+                score--;
+                otpt += " | -1 score for key downs";
             }
             if (File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\error.txt"))
             {
                 otpt += "\nSome internal error occured in RTKeyCount" + "###############################";
                 //Delete
                 File.Delete(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\error.txt");
+                score--;
+                otpt += " | -1 score for key downs";
             }
             else
             {
@@ -910,11 +1240,13 @@ namespace Evasor
             if (File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\RTPass.txt"))
             {
                 otpt += "\nWinograd Schema Challenge passed";
+                winogradPassed = true;
                 string text = File.ReadAllText(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\RTPass.txt");
                 string[] opArr = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
                 if (int.Parse(opArr[1]) == 1)
                 {
                     otpt += "\nReverse Turing Captcha test passed";
+                    rtTestPassed = true;
                 }
                 else
                 {
@@ -948,51 +1280,62 @@ namespace Evasor
             otpt += "\n";
 
             //Decrypting the malware/executable - sampleMalEnc.exe-----------------------------------------------
-            try
+            if(rtTestPassed && winogradPassed && score >= -2)
             {
-                //using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Evasor.otptEnc.exe"))
-                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Evasor.sampleMalEnc.exe"))
-                {
-                    using (FileStream fileStream = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.sampleMalEnc.exe"), FileMode.Create))
-                    {
-                        for (int i = 0; i < stream.Length; i++)
-                        {
-                            fileStream.WriteByte((byte)stream.ReadByte());
-                        }
-                        fileStream.Close();
-                    }
-                }
-            }
-            catch
-            {
-                otpt += "\nUnable to extract resource sampleMalEnc.exe" + "###############################";
-            }
-
-            //calling Decrypt
-            try
-            {
-                DecryptFile(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.sampleMalEnc.exe"),
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "PotMal.exe"));
-                //Start Mal/exec
+                File.WriteAllText(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\RealOrAnalysis.txt", "Real system detected");
                 try
                 {
-                    Process RTProc = new Process();
-                    ProcessStartInfo RTstartInfo = new ProcessStartInfo();
-                    RTstartInfo.FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "PotMal.exe");
-                    RTProc.StartInfo = RTstartInfo;
-                    RTProc.Start();
+                    //using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Evasor.otptEnc.exe"))
+                    using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Evasor.sampleMalEnc.exe"))
+                    {
+                        using (FileStream fileStream = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.sampleMalEnc.exe"), FileMode.Create))
+                        {
+                            for (int i = 0; i < stream.Length; i++)
+                            {
+                                fileStream.WriteByte((byte)stream.ReadByte());
+                            }
+                            fileStream.Close();
+                        }
+                    }
                 }
                 catch
                 {
-                    otpt += "\nUnable to execute PotMal.exe" + "###############################";
+                    otpt += "\nUnable to extract resource sampleMalEnc.exe" + "###############################";
                 }
-                //Delete file
-                File.Delete(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\Evasor.sampleMalEnc.exe");
+
+                //calling Decrypt
+                try
+                {
+                    DecryptFile(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.sampleMalEnc.exe"),
+                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "PotMal.exe"));
+                    //Start Mal/exec
+                    try
+                    {
+                        Process RTProc = new Process();
+                        ProcessStartInfo RTstartInfo = new ProcessStartInfo();
+                        RTstartInfo.FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "PotMal.exe");
+                        RTProc.StartInfo = RTstartInfo;
+                        RTProc.Start();
+                    }
+                    catch
+                    {
+                        otpt += "\nUnable to execute PotMal.exe" + "###############################";
+                    }
+                    //Delete file
+                    File.Delete(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\Evasor.sampleMalEnc.exe");
+                }
+                catch
+                {
+                    otpt += "\nUnable to decrypt executable";
+                }
             }
-            catch
+            else
             {
-                otpt += "\nUnable to decrypt executable";
+                File.WriteAllText(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\RealOrAnalysis.txt", "Analysis system detected");
             }
+            
+
+            otpt += "\nFinal score is " + score;
 
             //Checking final otpt
             //Console.WriteLine(otpt);
